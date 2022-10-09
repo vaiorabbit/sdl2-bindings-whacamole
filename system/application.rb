@@ -57,6 +57,8 @@ class Application
     @screenshot.setup(@renderer)
 
     @input.setup
+    @input.screen_width = @screen_width
+    @input.screen_height = @screen_height
 
     @services.setup
     @services.register_external(:Renderer, @renderer)

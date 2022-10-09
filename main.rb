@@ -34,7 +34,11 @@ def load_sdl2_lib
                  mixer_libpath: '/opt/homebrew/lib/libSDL2_mixer.dylib',
                  ttf_libpath: '/opt/homebrew/lib/libSDL2_ttf.dylib')
   when /linux/
-    SDL.load_lib('libSDL2.so') # not tested
+    # SDL.load_lib('/usr/lib/aarch64-linux-gnu/libSDL2.so', output_error = false,
+    SDL.load_lib(Dir.pwd + '/third_party/SDL2/libSDL2.so', output_error = false,
+                 image_libpath: '/usr/lib/aarch64-linux-gnu/libSDL2_image.so',
+                 mixer_libpath: '/usr/lib/aarch64-linux-gnu/libSDL2_mixer.so',
+                 ttf_libpath: '/usr/lib/aarch64-linux-gnu/libSDL2_ttf.so')
   else
     raise 'Unsupported platform.'
   end
