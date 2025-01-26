@@ -1,4 +1,4 @@
-require 'sdl2'
+require 'sdl3'
 require_relative 'bitmap_font'
 require_relative 'util'
 
@@ -67,16 +67,16 @@ module Text
     @@bitmap_fonts = {}
     COLOR_NAME.each {|sym| @@bitmap_fonts[sym] = BitmapFont.new}
 
-    bmp_fontsheet_rwops = SDL::RWFromFile('system/VP16Font.bmp', 'rb')
+    bmp_fontsheet_io = SDL::IOFromFile('system/VP16Font.bmp', 'rb')
 
     background_rgb = COLOR_MAP[:white]
 
     @@bitmap_fonts.each do |color_sym, bitmap_font|
-      bitmap_font.setup(renderer, bmp_fontsheet_rwops, COLOR_MAP[color_sym], background_rgb)
-      SDL.RWseek(bmp_fontsheet_rwops, 0, SDL::RW_SEEK_SET)
+      bitmap_font.setup(renderer, bmp_fontsheet_io, COLOR_MAP[color_sym], background_rgb)
+      SDL.SeekIO(bmp_fontsheet_io, 0, SDL::IO_SEEK_SET)
     end
 
-    SDL.RWclose(bmp_fontsheet_rwops)
+    SDL.CloseIO(bmp_fontsheet_io)
   end
 
   def self.cleanup

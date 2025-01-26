@@ -1,4 +1,4 @@
-require 'sdl2'
+require 'sdl3'
 
 class BitmapFont
   class DstRect
@@ -6,7 +6,7 @@ class BitmapFont
 
     def initialize
       @src = nil
-      @dst = SDL::Rect.new
+      @dst = SDL::FRect.new
     end
   end
 
@@ -16,7 +16,7 @@ class BitmapFont
     @height = 0
     @newline_height = 0
     @space_width = 0
-    @src_rects = Array.new(16 * 16) { SDL::Rect.new }
+    @src_rects = Array.new(16 * 16) { SDL::FRect.new }
     @dst_rects = Array.new(dst_count) { DstRect.new }
     @dst_count = 0
   end
@@ -24,26 +24,26 @@ class BitmapFont
   def setup(renderer, bmp_fontsheet, char_rgb, background_rgb)
     case bmp_fontsheet
     when String
-      bmp_fontsheet_rwops = SDL::RWFromFile(bmp_fontsheet, 'rb')
-      result = setup_rwops(renderer, bmp_fontsheet_rwops, char_rgb, background_rgb)
-      SDL::RWclose(bmp_fontsheet_rwops)
+      bmp_fontsheet_io = SDL::IOFromFile(bmp_fontsheet, 'rb')
+      result = setup_io(renderer, bmp_fontsheet_io, char_rgb, background_rgb)
+      SDL::CloseIO(bmp_fontsheet_io)
       result
     when FFI::Pointer # assumes bmp_fontsheet is a pointer to SDL::RWops
-      setup_rwops(renderer, bmp_fontsheet, char_rgb, background_rgb)
+      setup_io(renderer, bmp_fontsheet, char_rgb, background_rgb)
     else
       raise ArgumentError
     end
   end
 
-  def setup_rwops(renderer, bmp_fontsheet_rwops, char_rgb, background_rgb)
+  def setup_io(renderer, bmp_fontsheet_io, char_rgb, background_rgb)
     # Create texture from BMP surface
-    surface = SDL.LoadBMP_RW(bmp_fontsheet_rwops, 0)
+    surface = SDL.LoadBMP_IO(bmp_fontsheet_io, false)
     return false if surface.nil?
 
-    converted_surface = SDL.ConvertSurfaceFormat(surface, SDL::PIXELFORMAT_RGBA8888, 0)
+    converted_surface = SDL.ConvertSurface(surface, SDL::PIXELFORMAT_RGBA8888)
     if converted_surface.nil?
       # Failed to convert into appropreate format
-      SDL.FreeSurface(surface)
+      SDL.DestroySurface(surface)
       return false
     end
 
@@ -51,8 +51,8 @@ class BitmapFont
     texture = SDL.CreateTexture(renderer, SDL::PIXELFORMAT_RGBA8888, SDL::TEXTUREACCESS_STREAMING, converted_surface[:w], converted_surface[:h])
     if texture.nil?
       # Failed to craete texture from surface
-      SDL.FreeSurface(converted_surface)
-      SDL.FreeSurface(surface)
+      SDL.DestroySurface(converted_surface)
+      SDL.DestroySurface(surface)
       return false
     end
 
@@ -64,7 +64,7 @@ class BitmapFont
     # Copy font image into texture pixels
     texture_pixels = FFI::MemoryPointer.new(:pointer, 1)
     texture_pitch = FFI::MemoryPointer.new(:int32, 1)
-    SDL.LockTexture(texture, converted_surface[:clip_rect], texture_pixels, texture_pitch)
+    SDL.LockTexture(texture, nil, texture_pixels, texture_pitch)
 
     pixels_dst = texture_pixels.read_pointer
 
@@ -72,9 +72,9 @@ class BitmapFont
     pixels_dst.write_bytes(pixels_src, 0, pixels_src.length)
 
     # Make background transparent
-    foreground_color = SDL.MapRGB(converted_surface[:format], char_rgb[:r], char_rgb[:g], char_rgb[:b])
-    background_color = SDL.MapRGB(converted_surface[:format], background_rgb[:r], background_rgb[:g], background_rgb[:b])
-    transparent_color = SDL.MapRGBA(converted_surface[:format], 0x00, 0x00, 0x00, 0x00)
+    foreground_color = SDL.MapRGB(SDL.GetPixelFormatDetails(converted_surface[:format]), nil, char_rgb[:r], char_rgb[:g], char_rgb[:b])
+    background_color = SDL.MapRGB(SDL.GetPixelFormatDetails(converted_surface[:format]), nil, background_rgb[:r], background_rgb[:g], background_rgb[:b])
+    transparent_color = SDL.MapRGBA(SDL.GetPixelFormatDetails(converted_surface[:format]), nil, 0x00, 0x00, 0x00, 0x00)
 
     pixel_count = (texture_pitch.read_int / 4) * @height
     pixel_count.times do |i|
@@ -84,8 +84,8 @@ class BitmapFont
     end
 
     SDL.UnlockTexture(texture)
-    SDL.FreeSurface(converted_surface)
-    SDL.FreeSurface(surface)
+    SDL.DestroySurface(converted_surface)
+    SDL.DestroySurface(surface)
 
     @texture = texture
 
@@ -108,7 +108,7 @@ class BitmapFont
 
     true
   end
-  private :setup_rwops
+  private :setup_io
 
   def cleanup
     SDL::DestroyTexture(@texture)
@@ -146,7 +146,7 @@ class BitmapFont
 
     @dst_count.times do |i|
       r = @dst_rects[i]
-      SDL.RenderCopy(renderer, @texture, r.src, r.dst)
+      SDL.RenderTexture(renderer, @texture, r.src, r.dst)
     end
 
     @dst_count = 0

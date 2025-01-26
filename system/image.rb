@@ -1,4 +1,4 @@
-require 'sdl2'
+require 'sdl3'
 
 class Image
   FLIP_NONE = 0b00
@@ -8,15 +8,15 @@ class Image
   attr_reader :texture
 
   def self.load_as_surface(path)
-    rwops = SDL.RWFromFile(path, 'rb')
-    img = SDL.IMG_Load_RW(rwops, 1)
+    io = SDL.IOFromFile(path, 'rb')
+    img = SDL.IMG_Load_IO(io, true)
     image = SDL::Surface.new(img)
-    SDL.SetColorKey(image, SDL::TRUE, image[:pixels].read(:uint))
+    SDL.SetSurfaceColorKey(image, true, image[:pixels].read(:uint))
     image
   end
 
   def initialize
-    @rect = SDL::Rect.new
+    @rect = SDL::FRect.new
     @rect[:x] = 0
     @rect[:y] = 0
     @rect[:w] = 0
@@ -36,7 +36,7 @@ class Image
     @rect[:w] = @original_w
     @rect[:h] = @original_h
 
-    SDL.FreeSurface(image)
+    SDL.DestroySurface(image)
   end
 
   def cleanup
@@ -91,6 +91,6 @@ class Image
   end
 
   def render(renderer, flip = FLIP_NONE)
-    SDL.RenderCopyEx(renderer, @texture, nil, @rect, 0, nil, flip)
+    SDL.RenderTextureRotated(renderer, @texture, nil, @rect, 0, nil, flip)
   end
 end

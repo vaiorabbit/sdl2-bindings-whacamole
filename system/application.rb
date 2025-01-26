@@ -1,4 +1,4 @@
-require 'sdl2'
+require 'sdl3'
 require_relative 'game_state'
 require_relative 'image'
 require_relative 'input'
@@ -40,17 +40,23 @@ class Application
   end
 
   def setup(setup_func = nil)
-    SDL.Init(SDL::INIT_TIMER | SDL::INIT_AUDIO | SDL::INIT_VIDEO | SDL::INIT_GAMECONTROLLER)
-    SDL.IMG_Init(SDL::IMG_INIT_PNG)
-    SDL.TTF_Init()
+    SDL.Init(SDL::INIT_AUDIO | SDL::INIT_VIDEO | SDL::INIT_GAMEPAD)
     SDL.Mix_Init(SDL::MIX_INIT_MP3)
-    SDL.Mix_OpenAudio(SDL::MIX_DEFAULT_FREQUENCY, SDL::MIX_DEFAULT_FORMAT, SDL::MIX_DEFAULT_CHANNELS, 4096)
 
-    @window = SDL.CreateWindow(@title, @screen_x, @screen_y, @screen_width, @screen_height, 0)
+    audio_spec = SDL::AudioSpec.new
+    audio_spec[:format] = SDL::AUDIO_S16
+    audio_spec[:channels] = SDL::MIX_DEFAULT_CHANNELS
+    audio_spec[:freq] = 4096
+    SDL.Mix_OpenAudio(0, audio_spec)
 
-    SDL.SetWindowGrab(@window, SDL::TRUE) # Restrict mouse cursor to window
+    @window = SDL.CreateWindow(@title, @screen_width, @screen_height, 0)
+    SDL.SetWindowPosition(@window, @screen_x, @screen_y)
 
-    @renderer = SDL.CreateRenderer(@window, -1, SDL::RENDERER_PRESENTVSYNC)
+    SDL.SetWindowMouseGrab(@window, true) # Restrict mouse cursor to window
+
+    SDL.SetHint(SDL::HINT_RENDER_VSYNC, "1")
+    @renderer = SDL.CreateRenderer(@window, nil)
+    SDL.SetRenderLogicalPresentation(@renderer, @screen_width, @screen_height, SDL::LOGICAL_PRESENTATION_LETTERBOX)
 
     Text.setup(@renderer)
 
@@ -79,11 +85,9 @@ class Application
     @screenshot.cleanup
     Text.cleanup()
     SDL.DestroyRenderer(@renderer)
-    SDL.SetWindowGrab(@window, SDL::FALSE)
+    SDL.SetWindowMouseGrab(@window, false)
     SDL.DestroyWindow(@window)
     SDL.Mix_Quit()
-    SDL.IMG_Quit()
-    SDL.TTF_Quit()
     SDL.Quit()
   end
 
@@ -97,7 +101,7 @@ class Application
 
     until @end_main
       @input.prepare_event
-      @input.handle_event(event) while SDL.PollEvent(event) != 0
+      @input.handle_event(event) while SDL.PollEvent(event)
       @input.update
 
       dt = game_timer.elapsed

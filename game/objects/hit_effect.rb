@@ -1,4 +1,4 @@
-require 'sdl2'
+require 'sdl3'
 require_relative '../layout'
 require_relative '../../system/image'
 
@@ -10,7 +10,7 @@ class HitEffect
 
   def initialize
     @hit_image = nil
-    @rect = SDL::Rect.new
+    @rect = SDL::FRect.new
     @rect[:x] = 0
     @rect[:y] = 0
     @rect[:w] = 0
@@ -85,7 +85,7 @@ class HitEffect
     @rect[:x] = @pos_x - @rect[:w] * 0.5
     @rect[:y] = @pos_y - @rect[:h] * 0.5
     SDL.SetTextureAlphaMod(@hit_image.texture, @alpha)
-    SDL.RenderCopyEx(renderer, @hit_image.texture, nil, @rect, 0, nil, SDL::FLIP_NONE)
+    SDL.RenderTextureRotated(renderer, @hit_image.texture, nil, @rect, 0, nil, SDL::FLIP_NONE)
   end
 end
 

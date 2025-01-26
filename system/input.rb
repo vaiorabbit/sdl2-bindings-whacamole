@@ -1,4 +1,4 @@
-require 'sdl2'
+require 'sdl3'
 
 class KeyStatus
   attr_accessor :down, :prev_down, :trigger, :release, :repeat, :repeat_count
@@ -91,13 +91,13 @@ end
 
 class GamePad
   # Axis symbols
-  AXIS_LEFTX = SDL::CONTROLLER_AXIS_LEFTX
-  AXIS_LEFTY = SDL::CONTROLLER_AXIS_LEFTY
-  AXIS_RIGHTX = SDL::CONTROLLER_AXIS_RIGHTX
-  AXIS_RIGHTY = SDL::CONTROLLER_AXIS_RIGHTY
-  AXIS_TRIGGERLEFT = SDL::CONTROLLER_AXIS_TRIGGERLEFT
-  AXIS_TRIGGERRIGHT = SDL::CONTROLLER_AXIS_TRIGGERRIGHT
-  AXIS_MAX = SDL::CONTROLLER_AXIS_MAX
+  AXIS_LEFTX = SDL::GAMEPAD_AXIS_LEFTX
+  AXIS_LEFTY = SDL::GAMEPAD_AXIS_LEFTY
+  AXIS_RIGHTX = SDL::GAMEPAD_AXIS_RIGHTX
+  AXIS_RIGHTY = SDL::GAMEPAD_AXIS_RIGHTY
+  AXIS_TRIGGERLEFT = SDL::GAMEPAD_AXIS_LEFT_TRIGGER
+  AXIS_TRIGGERRIGHT = SDL::GAMEPAD_AXIS_RIGHT_TRIGGER
+  AXIS_MAX = SDL::GAMEPAD_AXIS_COUNT
 
   attr_reader :game_controller, :gamepad_id
 
@@ -258,12 +258,12 @@ class Input
     # curl -O https://raw.githubusercontent.com/gabomdq/SDL_GameControllerDB/master/gamecontrollerdb.txt
     return unless File.exist?('system/gamecontrollerdb.txt')
 
-    SDL.GameControllerAddMapping(File.read('system/gamecontrollerdb.txt'))
+    SDL.AddGamepadMapping(File.read('system/gamecontrollerdb.txt'))
   end
 
   def cleanup
     @active_gamepads.each_value do |gamepad|
-      SDL.GameControllerClose(gamepad.game_controller)
+      SDL.CloseGamepad(gamepad.game_controller)
     end
   end
 
@@ -275,74 +275,72 @@ class Input
   def handle_event(event)
     case event[:common][:type]
 
-    when SDL::KEYDOWN
-      keysym = event[:key][:keysym][:sym]
-      repeat = event[:key][:repeat] != 0
+    when SDL::EVENT_KEY_DOWN
+      keysym = event[:key][:key]
+      repeat = event[:key][:repeat]
       if @current_mapping&.sdl_key_map&.key?(keysym) && !repeat
         button = @current_mapping.sdl_key_map[keysym]
         button.prev_down = button.down
         button.down = 1
       end
-    when SDL::KEYUP
-      keysym = event[:key][:keysym][:sym]
-      repeat = event[:key][:repeat] != 0
+    when SDL::EVENT_KEY_UP
+      keysym = event[:key][:key]
+      repeat = event[:key][:repeat]
       if @current_mapping&.sdl_key_map&.key?(keysym) && !repeat
         button = @current_mapping.sdl_key_map[keysym]
         button.prev_down = button.down
         button.down = 0
       end
 
-    when SDL::MOUSEBUTTONDOWN
-      from_touch_device = (event[:button][:which] == SDL::TOUCH_MOUSEID)
+    when SDL::EVENT_MOUSE_BUTTON_DOWN
+      from_touch_device = (event[:button][:which] == -1) # TODO SDL::TOUCH_MOUSEID
       return if from_touch_device
       mouse_button = event[:button][:button]
-      mouse_state = event[:button][:state]
       if @current_mapping&.sdl_mouse_map&.key?(mouse_button)
         button = @current_mapping.sdl_mouse_map[mouse_button]
         button.prev_down = button.down
         button.down = 1
       end
-    when SDL::MOUSEBUTTONUP
-      from_touch_device = (event[:button][:which] == SDL::TOUCH_MOUSEID)
+    when SDL::EVENT_MOUSE_BUTTON_UP
+      from_touch_device = (event[:button][:which] == -1) # TODO SDL::TOUCH_MOUSEID
       return if from_touch_device
       mouse_button = event[:button][:button]
-      mouse_state = event[:button][:state]
       if @current_mapping&.sdl_mouse_map&.key?(mouse_button)
         button = @current_mapping.sdl_mouse_map[mouse_button]
         button.prev_down = button.down
         button.down = 0
       end
-    when SDL::MOUSEMOTION
-      from_touch_device = (event[:motion][:which] == SDL::TOUCH_MOUSEID)
+    when SDL::EVENT_MOUSE_MOTION
+      from_touch_device = (event[:motion][:which] == -1) # TODO SDL::TOUCH_MOUSEID
       return if from_touch_device
       @mouse_pos_x = event[:motion][:x]
       @mouse_pos_y = event[:motion][:y]
       @mouse_rel_x = event[:motion][:xrel]
       @mouse_rel_y = event[:motion][:yrel]
 
-    when SDL::FINGERDOWN, SDL::FINGERUP, SDL::FINGERMOTION
+    when SDL::EVENT_FINGER_DOWN, SDL::EVENT_FINGER_UP, SDL::EVENT_FINGER_MOTION
       @mouse_pos_x = event[:tfinger][:x] * @screen_width
       @mouse_pos_y = event[:tfinger][:y] * @screen_height
       @mouse_rel_x = event[:tfinger][:dx]
       @mouse_rel_y = event[:tfinger][:dy]
 
-    when SDL::CONTROLLERDEVICEADDED
+    when SDL::EVENT_GAMEPAD_ADDED
       gamepad_id = event[:cdevice][:which]
       unless @active_gamepads.key? gamepad_id
         @active_gamepads[gamepad_id] = GamePad.new(SDL.GameControllerOpen(gamepad_id), gamepad_id)
       end
-    when SDL::CONTROLLERDEVICEREMOVED
+    when SDL::EVENT_GAMEPAD_REMOVED
       gamepad_id = event[:cdevice][:which]
       unless @active_gamepads.key? gamepad_id
         SDL.GameControllerClose(gamepad_id)
         @active_gamepads.delete(gamepad_id)
       end
 
-    when SDL::CONTROLLERAXISMOTION
+    when SDL::EVENT_GAMEPAD_AXIS_MOTION
       gamepad_id = event[:caxis][:which]
       gamepad = @active_gamepads[gamepad_id]
       gamepad.set_axis_value(event[:caxis][:axis], event[:caxis][:value])
-    when SDL::CONTROLLERBUTTONDOWN
+    when SDL::EVENT_GAMEPAD_BUTTON_DOWN
       gamepad_id = event[:cbutton][:which]
       sdl_button = event[:cbutton][:button]
       if @current_mapping&.sdl_button_map[gamepad_id].key?(sdl_button)
@@ -350,7 +348,7 @@ class Input
         button.prev_down = button.down
         button.down = 1
       end
-    when SDL::CONTROLLERBUTTONUP
+    when SDL::EVENT_GAMEPAD_BUTTON_UP
       gamepad_id = event[:cbutton][:which]
       sdl_button = event[:cbutton][:button]
       if @current_mapping&.sdl_button_map[gamepad_id].key?(sdl_button)

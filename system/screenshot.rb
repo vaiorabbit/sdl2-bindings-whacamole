@@ -1,11 +1,11 @@
-require 'sdl2'
+require 'sdl3'
 
 class ScreenShot
 
   attr_reader :texture, :width, :height
 
   def initialize(width:, height:)
-    @rect = SDL::Rect.new
+    @rect = SDL::FRect.new
     @rect[:x] = 0
     @rect[:y] = 0
     @rect[:w] = width
@@ -31,16 +31,16 @@ class ScreenShot
   def capture
     release_texture
 
-    surface = SDL.CreateRGBSurfaceWithFormat(0, @rect[:w], @rect[:h], 32, SDL::PIXELFORMAT_ARGB8888)
+    surface = SDL.CreateSurface(@rect[:w], @rect[:h], SDL::PIXELFORMAT_ARGB8888)
     surface = SDL::Surface.new(surface)
-    SDL.RenderReadPixels(@renderer, nil, SDL::PIXELFORMAT_ARGB8888, surface[:pixels], surface[:pitch])
+    SDL.RenderReadPixels(@renderer, nil) # , SDL::PIXELFORMAT_ARGB8888, surface[:pixels], surface[:pitch])
     @texture = SDL.CreateTextureFromSurface(@renderer, surface)
-    SDL.FreeSurface(surface)
+    SDL.DestroySurface(surface)
   end
 
   def render(r: 255, g: 255, b: 255)
     SDL.SetTextureColorMod(@texture, r, g, b)
-    SDL.RenderCopyEx(@renderer, @texture, nil, @rect, 0, nil, SDL::FLIP_NONE)
+    SDL.RenderTextureRotated(@renderer, @texture, nil, @rect, 0, nil, SDL::FLIP_NONE)
   end
 
 end

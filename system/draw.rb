@@ -1,4 +1,4 @@
-require 'sdl2'
+require 'sdl3'
 
 module Circle
 
@@ -24,19 +24,19 @@ module Circle
 
       vertices[0][:position][:x] = @radius
       vertices[0][:position][:y] = @radius
-      vertices[0][:color][:r] = @r
-      vertices[0][:color][:g] = @g
-      vertices[0][:color][:b] = @b
-      vertices[0][:color][:a] = @a
+      vertices[0][:color][:r] = @r / 255.0
+      vertices[0][:color][:g] = @g / 255.0
+      vertices[0][:color][:b] = @b / 255.0
+      vertices[0][:color][:a] = @a / 255.0
       vtx0 = vertices[0]
       @division.times do |i|
         vtx = vertices[i + 1]
         vtx[:position][:x] = vtx0[:position][:x] + @radius * Math.cos(angle * i)
         vtx[:position][:y] = vtx0[:position][:y] + @radius * Math.sin(angle * i)
-        vtx[:color][:r] = r
-        vtx[:color][:g] = g
-        vtx[:color][:b] = b
-        vtx[:color][:a] = a
+        vtx[:color][:r] = @r / 255.0
+        vtx[:color][:g] = @g / 255.0
+        vtx[:color][:b] = @b / 255.0
+        vtx[:color][:a] = @a / 255.0
       end
 
       @indices_memory = FFI::MemoryPointer.new(:int, 3 * @division)
@@ -59,18 +59,18 @@ module Circle
     viewport_original = SDL::Rect.new
     viewport_temporal = SDL::Rect.new
 
-    SDL.RenderGetViewport(renderer, viewport_original)
+    SDL.GetRenderViewport(renderer, viewport_original)
 
     viewport_temporal[:x] = center_x - cache.radius
     viewport_temporal[:y] = center_y - cache.radius
     viewport_temporal[:w] = cache.radius * 2
     viewport_temporal[:h] = cache.radius * 2
 
-    SDL.RenderSetViewport(renderer, viewport_temporal)
+    SDL.SetRenderViewport(renderer, viewport_temporal)
 
     SDL.RenderGeometry(renderer, nil, cache.vertices_memory, cache.vertices_count, cache.indices_memory, cache.indices_count)
 
-    SDL.RenderSetViewport(renderer, viewport_original)
+    SDL.SetRenderViewport(renderer, viewport_original)
   end
 
 end

@@ -1,4 +1,4 @@
-require 'sdl2'
+require 'sdl3'
 
 module Color
   def self.from_u8(r = 0, g = 0, b = 0, a = 255)

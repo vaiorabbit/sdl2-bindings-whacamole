@@ -1,4 +1,4 @@
-require 'sdl2'
+require 'sdl3'
 require_relative '../../system/game_state'
 require_relative '../../system/input'
 require_relative '../../system/sound'
@@ -9,8 +9,8 @@ class PauseState < GameState
     mapping = InputMapping.new(:pause)
     mapping.register_key(:exit_game, SDL::SDLK_ESCAPE)
     mapping.register_key(:resume_game, SDL::SDLK_SPACE)
-    mapping.register_button(:exit_game, SDL::CONTROLLER_BUTTON_BACK, gamepad_id: 0)
-    mapping.register_button(:resume_game, SDL::CONTROLLER_BUTTON_START, gamepad_id: 0)
+    mapping.register_button(:exit_game, SDL::GAMEPAD_BUTTON_BACK, gamepad_id: 0)
+    mapping.register_button(:resume_game, SDL::GAMEPAD_BUTTON_START, gamepad_id: 0)
     mapping.register_mouse(:resume_game, SDL::BUTTON_LEFT, repeat_enabled: false)
     input.register_mapping(mapping)
     @screenshot = services.get(:ScreenShot)

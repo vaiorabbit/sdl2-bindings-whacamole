@@ -1,4 +1,4 @@
-require 'sdl2'
+require 'sdl3'
 
 module Sound
   class Bgm
@@ -7,7 +7,7 @@ module Sound
     end
 
     def setup
-      @bgm = SDL.Mix_LoadMUS_RW(SDL.RWFromFile(@path, 'rb'), 1) # 1 == freesrc
+      @bgm = SDL.Mix_LoadMUS_IO(SDL.IOFromFile(@path, 'rb'), true) # true == closeio
       self
     end
 
@@ -37,7 +37,7 @@ module Sound
     end
 
     def setup
-      @sefx = SDL.Mix_LoadWAV_RW(SDL.RWFromFile(@path, 'rb'), 1) # 1 == freesrc
+      @sefx = SDL.Mix_LoadWAV_IO(SDL.IOFromFile(@path, 'rb'), true) # 1 == closeio
       self
     end
 

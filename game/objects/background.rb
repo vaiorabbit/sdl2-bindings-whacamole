@@ -1,4 +1,4 @@
-require 'sdl2'
+require 'sdl3'
 require_relative '../layout'
 require_relative '../../system/image'
 
@@ -33,7 +33,7 @@ class Background
     Text.set(Layout.position(:score_current)[0], Layout.position(:score_current)[1], score.to_s.rjust(5), Text::WHITE)
 
     SDL.SetRenderDrawColor(renderer, 0, 0, 0, 96)
-    rect = SDL::Rect.new
+    rect = SDL::FRect.new
     rect[:x] = Layout.position(:score_header)[0] - Layout.size(:font)[0] / 2
     rect[:y] = Layout.position(:score_header)[1] - Layout.size(:font)[1] / 2
     rect[:w] = Layout.size(:font)[0] * "SCORE".chars.length + Layout.size(:font)[0]

@@ -1,4 +1,4 @@
-require 'sdl2'
+require 'sdl3'
 
 class Timer
   def initialize
