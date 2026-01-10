@@ -32,7 +32,7 @@ class ReadyState < GameState
   end
 
   def leave(_next_state_id)
-    Sound::Bgm.halt
+    @ready_bgm.halt
   end
 
   def update(dt)

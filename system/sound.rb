@@ -1,33 +1,51 @@
 require 'sdl3'
 
 module Sound
+  def self.setup()
+    SDL.MIX_Init()
+    @@mixer = SDL.MIX_CreateMixerDevice(SDL::AUDIO_DEVICE_DEFAULT_PLAYBACK, nil)
+  end
+
+  def self.cleanup()
+    SDL.MIX_DestroyMixer(@@mixer)
+    SDL.MIX_Quit()
+  end
+
+  def self.mixer = @@mixer
+
   class Bgm
     def initialize(music_path)
       @path = music_path
     end
 
     def setup
-      @bgm = SDL.Mix_LoadMUS_IO(SDL.IOFromFile(@path, 'rb'), true) # true == closeio
+      @audio = SDL.MIX_LoadAudio_IO(Sound.mixer, SDL.IOFromFile(@path, 'rb'), true, true)
+      @track = SDL.MIX_CreateTrack(Sound.mixer)
+      @options = SDL.CreateProperties()
+      SDL.MIX_SetTrackAudio(@track, @audio)
       self
     end
 
     def cleanup
-      SDL.Mix_FreeMusic(@bgm)
-      @bgm = nil
+      SDL.DestroyProperties(@options)
+      SDL.MIX_DestroyTrack(@track)
+      SDL.MIX_DestroyAudio(@audio)
+      @options = nil
+      @track = nil
+      @audio = nil
     end
 
     def play(do_loop: true)
-      SDL.Mix_PlayMusic(@bgm, do_loop ? -1 : 0)
+      SDL.MIX_SetTrackLoops(@track, do_loop ? -1 : 0)
+      SDL.MIX_PlayTrack(@track, do_loop ? -1 : 0)
     end
 
-    ##################################################
-
-    def self.fadeout(ms: 500)
-      SDL.Mix_FadeOutMusic(ms)
+    def fadeout(ms: 500)
+      SDL.MIX_StopTrack(@track, ms)
     end
 
-    def self.halt
-      SDL.Mix_HaltMusic()
+    def halt
+      SDL.MIX_StopTrack(@track, 0)
     end
   end
 
@@ -37,17 +55,25 @@ module Sound
     end
 
     def setup
-      @sefx = SDL.Mix_LoadWAV_IO(SDL.IOFromFile(@path, 'rb'), true) # 1 == closeio
+      @audio = SDL.MIX_LoadAudio_IO(Sound.mixer, SDL.IOFromFile(@path, 'rb'), true, true)
+      @track = SDL.MIX_CreateTrack(Sound.mixer)
+      @options = SDL.CreateProperties()
+      SDL.MIX_SetTrackAudio(@track, @audio)
       self
     end
 
     def cleanup
-      SDL.Mix_FreeChunk(@sefx)
-      @sefx = nil
+      SDL.DestroyProperties(@options)
+      SDL.MIX_DestroyTrack(@track)
+      SDL.MIX_DestroyAudio(@audio)
+      @options = nil
+      @track = nil
+      @audio = nil
     end
 
     def play(do_loop: false)
-      SDL.Mix_PlayChannelTimed(-1, @sefx, do_loop ? -1 : 0, -1)
+      SDL.MIX_SetTrackLoops(@track, do_loop ? -1 : 0)
+      SDL.MIX_PlayTrack(@track, do_loop ? -1 : 0)
     end
   end
 end

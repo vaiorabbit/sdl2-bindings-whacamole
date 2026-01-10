@@ -43,7 +43,7 @@ class ResultState < GameState
 
   def leave(_next_state_id)
     input.unset_mapping
-    Sound::Bgm.halt
+    @gameover_bgm.halt
   end
 
   def update(dt)

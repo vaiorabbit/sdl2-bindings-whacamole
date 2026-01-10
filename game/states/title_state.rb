@@ -35,7 +35,7 @@ class TitleState < GameState
 
   def leave(_next_state_id)
     input.unset_mapping
-    SDL.Mix_FadeOutMusic(30)
+    @title_bgm.fadeout(ms: 30)
   end
 
   def update(dt)

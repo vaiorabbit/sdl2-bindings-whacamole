@@ -74,7 +74,7 @@ class MainState < GameState
   def leave(_next_state_id)
     @screenshot.capture
     input.unset_mapping
-    Sound::Bgm.fadeout(ms: 500) unless _next_state_id == :pause
+    @main_bgm.fadeout(ms: 500) unless _next_state_id == :pause
   end
 
   def update(dt)

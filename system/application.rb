@@ -41,13 +41,6 @@ class Application
 
   def setup(setup_func = nil)
     SDL.Init(SDL::INIT_AUDIO | SDL::INIT_VIDEO | SDL::INIT_GAMEPAD)
-    SDL.Mix_Init(SDL::MIX_INIT_MP3)
-
-    audio_spec = SDL::AudioSpec.new
-    audio_spec[:format] = SDL::AUDIO_S16
-    audio_spec[:channels] = SDL::MIX_DEFAULT_CHANNELS
-    audio_spec[:freq] = 4096
-    SDL.Mix_OpenAudio(0, audio_spec)
 
     @window = SDL.CreateWindow(@title, @screen_width, @screen_height, 0)
     SDL.SetWindowPosition(@window, @screen_x, @screen_y)
@@ -57,6 +50,8 @@ class Application
     SDL.SetHint(SDL::HINT_RENDER_VSYNC, "1")
     @renderer = SDL.CreateRenderer(@window, nil)
     SDL.SetRenderLogicalPresentation(@renderer, @screen_width, @screen_height, SDL::LOGICAL_PRESENTATION_LETTERBOX)
+
+    Sound.setup()
 
     Text.setup(@renderer)
 
@@ -84,10 +79,11 @@ class Application
     @input.cleanup
     @screenshot.cleanup
     Text.cleanup()
+    Sound.cleanup()
     SDL.DestroyRenderer(@renderer)
     SDL.SetWindowMouseGrab(@window, false)
     SDL.DestroyWindow(@window)
-    SDL.Mix_Quit()
+    SDL.MIX_Quit()
     SDL.Quit()
   end
 
