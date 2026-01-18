@@ -36,8 +36,8 @@ module Sound
     end
 
     def play(do_loop: true)
-      SDL.MIX_SetTrackLoops(@track, do_loop ? -1 : 0)
-      SDL.MIX_PlayTrack(@track, do_loop ? -1 : 0)
+      SDL.SetNumberProperty(@options, SDL::MIX_PROP_PLAY_LOOPS_NUMBER, -1) if do_loop
+      SDL.MIX_PlayTrack(@track, @options)
     end
 
     def fadeout(ms: 500)
@@ -72,8 +72,8 @@ module Sound
     end
 
     def play(do_loop: false)
-      SDL.MIX_SetTrackLoops(@track, do_loop ? -1 : 0)
-      SDL.MIX_PlayTrack(@track, do_loop ? -1 : 0)
+      SDL.SetNumberProperty(@options, SDL::MIX_PROP_PLAY_LOOPS_NUMBER, -1) if do_loop
+      SDL.MIX_PlayTrack(@track, @options)
     end
   end
 end

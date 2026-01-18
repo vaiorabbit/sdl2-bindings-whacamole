@@ -52,6 +52,6 @@ class TitleState < GameState
 
     Text.set(32, 180, "           Whac-a-Mole!\n     Ruby SDL3-Bindings demo", Text::BLUE)
     Text.set(32, 300, "  Click or press SPACE to start\n         Press ESC to exit", Text::RED)
-    Text.set(32, 440, "       2022-2025 vaiorabbit", Text::WHITE)
+    Text.set(32, 440, "       2022-2026 vaiorabbit", Text::WHITE)
   end
 end

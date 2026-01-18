@@ -1,3 +1,7 @@
+2026-01-18  vaiorabbit  <http://twitter.com/vaiorabbit>
+
+	* Fixed wrong SDL_Mixer API call
+
 2026-01-10  vaiorabbit  <http://twitter.com/vaiorabbit>
 
 	* Migrated to SDL_mixer 3 / Added prebuilt binaries
